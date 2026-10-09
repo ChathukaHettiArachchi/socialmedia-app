@@ -194,23 +194,36 @@ a:hover {
   letter-spacing: 0.5px;
 }
 
+/* Hide native Edge/Chrome password reveal buttons */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
-.input-wrapper i {
+.input-wrapper i:first-of-type {
   position: absolute;
   left: 14px;
   color: var(--text-muted);
   font-size: 1.05rem;
   transition: var(--transition);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .form-control {
   width: 100%;
-  padding: 12px 16px 12px 42px;
+  padding: 12px 46px 12px 42px;
   background-color: var(--bg-input);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-md);
@@ -218,6 +231,7 @@ a:hover {
   font-size: 0.95rem;
   font-family: inherit;
   transition: var(--transition);
+  box-sizing: border-box;
 }
 
 .form-control:focus {

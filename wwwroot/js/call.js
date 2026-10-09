@@ -93,6 +93,9 @@ const Call = {
 
   async getLocalAudioStream() {
     try {
+      if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        UI.showToast('error', '⚠️ Camera & Microphone access is BLOCKED by your browser because this site is loaded over unsecure HTTP. Please use HTTPS or enable browser flags.');
+      }
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         return await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       }
@@ -119,6 +122,9 @@ const Call = {
 
   async getLocalVideoStream() {
     try {
+      if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        UI.showToast('error', '⚠️ Camera & Microphone access is BLOCKED by your browser because this site is loaded over unsecure HTTP. Please use HTTPS or enable browser flags.');
+      }
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         return await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       }

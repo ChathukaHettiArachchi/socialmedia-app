@@ -138,14 +138,21 @@
 
 .password-toggle {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
   color: var(--text-muted);
   transition: var(--transition);
+  z-index: 5;
+  font-size: 1.05rem;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
 }
 
 .password-toggle:hover {
-  color: var(--text-main);
+  color: var(--primary);
 }
