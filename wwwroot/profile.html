@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - SocialConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+
+  <div class="glass-card" style="width: 100%; max-width: 560px; padding: 36px; position: relative;">
+    <a href="dashboard.html" class="btn btn-secondary" style="position: absolute; top: 20px; left: 20px; padding: 8px 14px; font-size: 0.85rem;">
+      <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+
+    <div class="profile-card-header" style="margin-top: 10px;">
+      <img id="profile-page-avatar" src="" alt="Avatar" class="profile-avatar-large">
+      <h2 id="profile-page-fullname" class="profile-full-name">Full Name</h2>
+      <p id="profile-page-username" class="profile-username">@username</p>
+      
+      <div class="status-badge status-online">
+        <span class="status-dot"></span> 🟢 Online
+      </div>
+    </div>
+
+    <div class="profile-info-grid">
+      <div class="profile-info-item">
+        <div class="profile-info-label">Email Address</div>
+        <div id="profile-page-email" class="profile-info-value">email@example.com</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="profile-info-label">Bio / About</div>
+        <div id="profile-page-bio" class="profile-info-value">Software Developer</div>
+      </div>
+      <div class="profile-info-item">
+        <div class="profile-info-label">Member Since</div>
+        <div id="profile-page-joined" class="profile-info-value">-</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 28px; display: flex; gap: 12px;">
+      <button class="btn btn-primary" id="edit-from-profile-page" style="flex: 1;">
+        <i class="fa-solid fa-pen"></i> Edit Profile
+      </button>
+      <button class="btn btn-danger" onclick="Auth.logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
+      </button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('profile-page-avatar').src = UI.getAvatarUrl(user);
+      document.getElementById('profile-page-fullname').textContent = user.fullName || user.username;
+      document.getElementById('profile-page-username').textContent = `@${user.username}`;
+      document.getElementById('profile-page-email').textContent = user.email;
+      document.getElementById('profile-page-bio').textContent = user.bio || 'No bio added yet.';
+      
+      const date = new Date(user.createdAt);
+      document.getElementById('profile-page-joined').textContent = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      document.getElementById('edit-from-profile-page').addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+    });
+  </script>
+</body>
+</html>

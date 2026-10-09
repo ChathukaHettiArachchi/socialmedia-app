@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - SocialConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/users.css">
+  <link rel="stylesheet" href="css/call.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <div class="user-profile-summary" id="open-profile-btn" title="View Profile">
+          <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="User Avatar" class="user-avatar">
+          <div class="user-details-mini">
+            <span id="header-user-name" class="user-name-display">Loading...</span>
+            <span id="header-user-handle" class="user-handle-display">@username</span>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button class="icon-btn" id="find-people-nav-btn" title="Find People" onclick="window.location.href='users.html'">
+            <i class="fa-solid fa-user-plus"></i>
+          </button>
+          <button class="icon-btn" id="edit-profile-btn" title="Edit Profile">
+            <i class="fa-solid fa-user-pen"></i>
+          </button>
+          <button class="icon-btn" id="logout-btn" title="Logout" style="color: var(--accent-danger);">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="sidebar-nav">
+        <button class="nav-tab active" id="tab-chats-btn">
+          <i class="fa-solid fa-comments"></i> Chats
+        </button>
+        <button class="nav-tab" id="tab-people-btn">
+          <i class="fa-solid fa-user-group"></i> People
+        </button>
+        <button class="nav-tab" id="tab-calls-btn">
+          <i class="fa-solid fa-clock-rotate-left"></i> Calls
+        </button>
+      </div>
+
+      <!-- Chats Sidebar Panel -->
+      <div class="sidebar-content" id="sidebar-chats-panel">
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+            Connected Friends
+          </h4>
+          <div id="sidebar-friends-container">
+            <!-- Connected friends list -->
+          </div>
+        </div>
+      </div>
+
+      <!-- People Sidebar Panel -->
+      <div class="sidebar-content" id="sidebar-people-panel" style="display: none;">
+        <div style="margin-bottom: 14px;">
+          <div class="input-wrapper">
+            <input type="text" id="sidebar-user-search-input" class="form-control" placeholder="Search people..." style="padding-left: 36px; font-size: 0.88rem;">
+            <i class="fa-solid fa-magnifying-glass" style="left: 12px; font-size: 0.9rem;"></i>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+            Pending Requests
+          </h4>
+          <div id="sidebar-pending-container">
+            <!-- Pending requests -->
+          </div>
+        </div>
+
+        <div>
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+            Find People
+          </h4>
+          <div id="sidebar-users-container">
+            <!-- Users list -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Calls Sidebar Panel -->
+      <div class="sidebar-content" id="sidebar-calls-panel" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+            Recent Calls
+          </h4>
+          <button class="btn btn-secondary btn-sm" onclick="Call.loadCallHistory()" style="padding: 2px 8px; font-size: 0.75rem;">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+        <div id="sidebar-calls-container">
+          <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+            <i class="fa-solid fa-phone" style="font-size: 1.8rem; margin-bottom: 8px;"></i>
+            <p style="font-size: 0.88rem;">Loading calls...</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <div class="welcome-screen">
+        <div class="phase-pill">
+          <i class="fa-solid fa-circle-check"></i> Phase 1 & 2 Active: Auth + User Discovery & Connections
+        </div>
+        <div class="welcome-icon-box">
+          <i class="fa-solid fa-users-viewfinder"></i>
+        </div>
+        <h2 class="welcome-title">Find & Connect With People!</h2>
+        <p class="welcome-desc">
+          Search registered users by username, full name, or email. Send connection requests, accept/reject incoming requests, and manage your connected friends list.
+        </p>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <a href="users.html" class="btn btn-primary" style="padding: 12px 24px;">
+            <i class="fa-solid fa-user-plus"></i> Open User Discovery Page
+          </a>
+          <button class="btn btn-secondary" onclick="UI.openModal('view-profile-modal')">
+            <i class="fa-solid fa-id-card"></i> My Profile
+          </button>
+        </div>
+
+        <div class="glass-card" style="padding: 24px; max-width: 600px; width: 100%; text-align: left;">
+          <h4 style="color: var(--primary); font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-user-group"></i> My Connections</span>
+            <span id="friends-count-badge" style="font-size: 0.8rem; background: var(--primary-glow); color: var(--primary); padding: 2px 8px; border-radius: var(--radius-full);">0 friends</span>
+          </h4>
+          <div id="dashboard-friends-list">
+            <!-- Connected friends list -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- View Profile Modal -->
+  <div class="modal-backdrop" id="view-profile-modal">
+    <div class="modal-content glass-card">
+      <button class="modal-close-btn" onclick="UI.closeModal('view-profile-modal')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div class="profile-card-header">
+        <img id="modal-profile-avatar" src="" alt="Avatar" class="profile-avatar-large">
+        <h3 id="modal-profile-name" class="profile-full-name">Full Name</h3>
+        <p id="modal-profile-username" class="profile-username">@username</p>
+        <span class="status-badge status-online">
+          <span class="status-dot"></span> 🟢 Online
+        </span>
+      </div>
+      <div class="profile-info-grid">
+        <div class="profile-info-item">
+          <div class="profile-info-label">Email Address</div>
+          <div id="modal-profile-email" class="profile-info-value">email@example.com</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Bio / About</div>
+          <div id="modal-profile-bio" class="profile-info-value">No bio added yet.</div>
+        </div>
+        <div class="profile-info-item">
+          <div class="profile-info-label">Member Since</div>
+          <div id="modal-profile-joined" class="profile-info-value">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-backdrop" id="edit-profile-modal">
+    <div class="modal-content glass-card" style="max-width: 500px;">
+      <button class="modal-close-btn" onclick="UI.closeModal('edit-profile-modal')">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 20px;">
+        <i class="fa-solid fa-user-pen" style="color: var(--primary);"></i> Edit Profile
+      </h3>
+
+      <form id="profile-edit-form" enctype="multipart/form-data">
+        <div class="avatar-upload-container" style="margin-bottom: 16px;">
+          <div class="avatar-preview-wrapper" id="edit-avatar-trigger" title="Change Photo">
+            <img id="edit-avatar-preview-img" src="" alt="Avatar">
+            <div class="avatar-overlay">
+              <i class="fa-solid fa-camera"></i>
+            </div>
+          </div>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Click to change profile picture</span>
+          <input type="file" id="edit-profile-avatar-input" name="profilePhoto" class="hidden-file-input" accept="image/jpeg,image/png,image/webp">
+        </div>
+
+        <div class="form-group">
+          <label for="edit-fullName">Full Name</label>
+          <div class="input-wrapper">
+            <input type="text" id="edit-fullName" name="fullName" class="form-control" required>
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-bio">Bio / About</label>
+          <div class="input-wrapper">
+            <input type="text" id="edit-bio" name="bio" class="form-control">
+            <i class="fa-solid fa-quote-left"></i>
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+        <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px;">Change Password (Optional)</h4>
+
+        <div class="form-group">
+          <label for="edit-currentPassword">Current Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="edit-currentPassword" name="currentPassword" class="form-control" placeholder="Required to change password">
+            <i class="fa-solid fa-lock"></i>
+            <i class="fa-solid fa-eye password-toggle"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-newPassword">New Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="edit-newPassword" name="newPassword" class="form-control" placeholder="Min. 6 characters" minlength="6">
+            <i class="fa-solid fa-key"></i>
+            <i class="fa-solid fa-eye password-toggle"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+          Save Changes <i class="fa-solid fa-check"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Incoming Voice Call Modal -->
+  <div class="modal-backdrop" id="incoming-voice-call-modal">
+    <div class="modal-content glass-card" style="max-width: 400px; text-align: center; padding: 28px;">
+      <div style="margin-bottom: 16px;">
+        <img id="incoming-caller-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-green); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);">
+      </div>
+      <h3 id="incoming-caller-name" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Incoming Call</h3>
+      <p style="font-size: 0.88rem; color: var(--accent-green); font-weight: 600; margin-bottom: 24px;">
+        <i class="fa-solid fa-phone-volume fa-shake"></i> Incoming Voice Call...
+      </p>
+      <div style="display: flex; gap: 14px;">
+        <button class="btn btn-danger" onclick="Call.rejectIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700;">
+          <i class="fa-solid fa-phone-slash"></i> Decline
+        </button>
+        <button class="btn btn-primary" onclick="Call.acceptIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <i class="fa-solid fa-phone"></i> Accept
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Video Call Modal -->
+  <div class="modal-backdrop" id="incoming-video-call-modal">
+    <div class="modal-content glass-card" style="max-width: 400px; text-align: center; padding: 28px;">
+      <div style="margin-bottom: 16px;">
+        <img id="incoming-video-caller-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);">
+      </div>
+      <h3 id="incoming-video-caller-name" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Incoming Video Call</h3>
+      <p style="font-size: 0.88rem; color: var(--primary); font-weight: 600; margin-bottom: 24px;">
+        <i class="fa-solid fa-video fa-shake"></i> Incoming Video Call...
+      </p>
+      <div style="display: flex; gap: 14px;">
+        <button class="btn btn-danger" onclick="Call.rejectIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700;">
+          <i class="fa-solid fa-phone-slash"></i> Decline
+        </button>
+        <button class="btn btn-primary" onclick="Call.acceptIncomingVideoCall()" style="flex: 1; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+          <i class="fa-solid fa-video"></i> Accept Video
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/lib/signalr.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/call.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      Profile.init();
+      Profile.renderProfileData(user);
+      Users.init();
+      Chat.initSignalR();
+
+      // Load connections for sidebar and dashboard
+      loadDashboardConnections();
+
+      // Tab Toggling
+      const tabChatsBtn = document.getElementById('tab-chats-btn');
+      const tabPeopleBtn = document.getElementById('tab-people-btn');
+      const tabCallsBtn = document.getElementById('tab-calls-btn');
+      const chatsPanel = document.getElementById('sidebar-chats-panel');
+      const peoplePanel = document.getElementById('sidebar-people-panel');
+      const callsPanel = document.getElementById('sidebar-calls-panel');
+
+      tabChatsBtn.addEventListener('click', () => {
+        tabChatsBtn.classList.add('active');
+        tabPeopleBtn.classList.remove('active');
+        if (tabCallsBtn) tabCallsBtn.classList.remove('active');
+        chatsPanel.style.display = 'block';
+        peoplePanel.style.display = 'none';
+        if (callsPanel) callsPanel.style.display = 'none';
+      });
+
+      tabPeopleBtn.addEventListener('click', () => {
+        tabPeopleBtn.classList.add('active');
+        tabChatsBtn.classList.remove('active');
+        if (tabCallsBtn) tabCallsBtn.classList.remove('active');
+        peoplePanel.style.display = 'block';
+        chatsPanel.style.display = 'none';
+        if (callsPanel) callsPanel.style.display = 'none';
+        
+        Users.loadUsersContainer('sidebar-users-container');
+        Users.loadPendingRequestsContainer('sidebar-pending-container');
+      });
+
+      if (tabCallsBtn) {
+        tabCallsBtn.addEventListener('click', () => {
+          tabCallsBtn.classList.add('active');
+          tabChatsBtn.classList.remove('active');
+          tabPeopleBtn.classList.remove('active');
+          if (callsPanel) callsPanel.style.display = 'block';
+          chatsPanel.style.display = 'none';
+          peoplePanel.style.display = 'none';
+
+          if (typeof Call !== 'undefined' && Call.loadCallHistory) {
+            Call.loadCallHistory();
+          }
+        });
+      }
+
+      // Event listeners for profile modals & logout
+      document.getElementById('open-profile-btn').addEventListener('click', () => UI.openModal('view-profile-modal'));
+      document.getElementById('edit-profile-btn').addEventListener('click', () => UI.openModal('edit-profile-modal'));
+      document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+    });
+
+    async function loadDashboardConnections() {
+      try {
+        const [friends, conversations] = await Promise.all([
+          API.get('/friendrequests/friends'),
+          API.get('/conversations').catch(() => [])
+        ]);
+
+        const unreadMap = {};
+        if (Array.isArray(conversations)) {
+          conversations.forEach(c => {
+            if (c.otherParticipant) {
+              unreadMap[c.otherParticipant.id] = c.unreadCount || 0;
+            }
+          });
+        }
+
+        const countBadge = document.getElementById('friends-count-badge');
+        if (countBadge) countBadge.textContent = `${friends.length} friend${friends.length === 1 ? '' : 's'}`;
+
+        const sidebarContainer = document.getElementById('sidebar-friends-container');
+        const dashContainer = document.getElementById('dashboard-friends-list');
+
+        if (friends.length === 0) {
+          const emptyHtml = `
+            <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+              <i class="fa-solid fa-user-clock" style="font-size: 1.8rem; margin-bottom: 8px;"></i>
+              <p style="font-size: 0.9rem;">No connections yet.</p>
+              <a href="users.html" class="btn btn-primary btn-sm" style="margin-top: 10px; display: inline-flex;">
+                <i class="fa-solid fa-user-plus"></i> Find Friends
+              </a>
+            </div>
+          `;
+          if (sidebarContainer) sidebarContainer.innerHTML = emptyHtml;
+          if (dashContainer) dashContainer.innerHTML = emptyHtml;
+          return;
+        }
+
+        const html = friends.map(f => {
+          const unreadCount = unreadMap[f.userId] || 0;
+          const hasUnread = unreadCount > 0;
+
+          return `
+            <div class="friend-item ${hasUnread ? 'has-unread' : ''}" onclick="window.location.href='chat.html?userId=${f.userId}'" title="Click to chat with ${UI.escapeHtml(f.fullName)}">
+              <div class="avatar-container">
+                <img src="${UI.getAvatarUrl(f)}" class="user-avatar" style="width: 42px; height: 42px;">
+                <span class="${f.isOnline ? 'online-blob' : 'offline-blob'}" title="${f.isOnline ? 'Online' : 'Offline'}"></span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 0.92rem; font-weight: 700; color: var(--text-main);">${UI.escapeHtml(f.fullName)}</span>
+                  ${hasUnread ? `<span class="unread-count-badge">${unreadCount}</span>` : ''}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">@${UI.escapeHtml(f.username)}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" style="font-size: 0.78rem; padding: 4px 10px; gap: 4px;" onclick="event.stopPropagation(); window.location.href='chat.html?userId=${f.userId}'">
+                <i class="fa-solid fa-comments"></i> Chat
+              </button>
+            </div>
+          `;
+        }).join('');
+
+        if (sidebarContainer) sidebarContainer.innerHTML = html;
+        if (dashContainer) dashContainer.innerHTML = html;
+      } catch (err) {
+        console.error('Failed to load dashboard connections:', err);
+      }
+    }
+  </script>
+</body>
+</html>

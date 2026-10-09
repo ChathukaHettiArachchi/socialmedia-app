@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register Account - SocialConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card glass-card" style="max-width: 520px;">
+      <div class="auth-header">
+        <div class="auth-brand">
+          <i class="fa-solid fa-comments"></i>
+          <h1>Create Account</h1>
+        </div>
+        <p class="auth-subtitle">Join SocialConnect and connect with your friends</p>
+      </div>
+
+      <form id="register-form" enctype="multipart/form-data">
+        <!-- Avatar Upload Section -->
+        <div class="avatar-upload-container">
+          <div class="avatar-preview-wrapper" id="avatar-preview-trigger" title="Click to upload profile photo">
+            <img id="avatar-preview-img" src="" alt="Profile Preview" style="display: none;">
+            <div class="avatar-placeholder" id="avatar-placeholder">
+              <i class="fa-solid fa-camera"></i>
+              <span style="font-size: 0.72rem; font-weight: 600;">Photo</span>
+            </div>
+            <div class="avatar-overlay">
+              <i class="fa-solid fa-pen"></i>
+            </div>
+          </div>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Optional Profile Photo (Max 5MB)</span>
+          <input type="file" id="register-avatar-input" name="profilePhoto" class="hidden-file-input" accept="image/jpeg,image/png,image/webp">
+        </div>
+
+        <div class="form-group">
+          <label for="fullName">Full Name</label>
+          <div class="input-wrapper">
+            <input type="text" id="fullName" name="fullName" class="form-control" placeholder="e.g. John Smith" required>
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" name="username" class="form-control" placeholder="e.g. johnsmith" required pattern="^[a-zA-Z0-9_]{3,30}$" title="3-30 letters, numbers or underscores">
+            <i class="fa-solid fa-at"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrapper">
+            <input type="email" id="email" name="email" class="form-control" placeholder="john@example.com" required>
+            <i class="fa-solid fa-envelope"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bio">Bio / About</label>
+          <div class="input-wrapper">
+            <input type="text" id="bio" name="bio" class="form-control" placeholder="Software engineering student...">
+            <i class="fa-solid fa-quote-left"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" name="password" class="form-control" placeholder="Min. 6 characters" required minlength="6">
+            <i class="fa-solid fa-lock"></i>
+            <i class="fa-solid fa-eye password-toggle"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Re-enter password" required minlength="6">
+            <i class="fa-solid fa-shield-halved"></i>
+            <i class="fa-solid fa-eye password-toggle"></i>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 12px;">
+          Create Account <i class="fa-solid fa-user-plus"></i>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already registered? <a href="login.html">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.getCurrentUser();
+      if (user) {
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</body>
+</html>

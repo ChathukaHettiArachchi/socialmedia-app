@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find People - SocialConnect</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/users.css">
+  <link rel="stylesheet" href="css/call.css">
+  <link rel="stylesheet" href="css/profile.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body style="background-color: var(--bg-primary); min-height: 100vh; padding: 24px;">
+  
+  <div style="max-width: 1100px; margin: 0 auto;">
+    <!-- Top Nav Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="dashboard.html" class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;">
+          <i class="fa-solid fa-arrow-left"></i> Dashboard
+        </a>
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">
+          <i class="fa-solid fa-user-plus" style="color: var(--primary);"></i> Find People
+        </h2>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <img id="nav-user-avatar" src="" alt="Avatar" class="user-avatar" style="width: 40px; height: 40px;">
+        <span id="nav-user-name" style="font-weight: 700; font-size: 0.92rem;">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="users-search-bar">
+      <div class="input-wrapper">
+        <input type="text" id="user-search-input" class="form-control" placeholder="Search people by name, username or email..." style="padding-left: 44px; font-size: 1.05rem; height: 50px;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size: 1.2rem; top: 16px; left: 16px;"></i>
+      </div>
+    </div>
+
+    <!-- Layout Grid (Main List + Sidebar Pending Requests) -->
+    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 24px;" id="users-page-grid">
+      <!-- Users Search Results Grid -->
+      <div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--text-secondary);">
+          Registered Users
+        </h3>
+        <div id="users-list-container" class="users-grid">
+          <!-- User Cards loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Connections Sidebar -->
+      <div>
+        <div class="glass-card" style="padding: 20px; margin-bottom: 20px;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: var(--primary); display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-clock-rotate-left"></i> Connection Requests</span>
+          </h4>
+          <div id="pending-requests-container">
+            <!-- Pending Requests loaded dynamically -->
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 20px;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: var(--accent-green); display: flex; align-items: center; justify-content: space-between;">
+            <span><i class="fa-solid fa-user-group"></i> My Connections</span>
+          </h4>
+          <div id="friends-list-container">
+            <!-- Connected Friends loaded dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Voice Call Modal -->
+  <div class="modal-backdrop" id="incoming-voice-call-modal">
+    <div class="modal-content glass-card" style="max-width: 400px; text-align: center; padding: 28px;">
+      <div style="margin-bottom: 16px;">
+        <img id="incoming-caller-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent-green); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);">
+      </div>
+      <h3 id="incoming-caller-name" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Incoming Call</h3>
+      <p style="font-size: 0.88rem; color: var(--accent-green); font-weight: 600; margin-bottom: 24px;">
+        <i class="fa-solid fa-phone-volume fa-shake"></i> Incoming Voice Call...
+      </p>
+      <div style="display: flex; gap: 14px;">
+        <button class="btn btn-danger" onclick="Call.rejectIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700;">
+          <i class="fa-solid fa-phone-slash"></i> Decline
+        </button>
+        <button class="btn btn-primary" onclick="Call.acceptIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <i class="fa-solid fa-phone"></i> Accept
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Video Call Modal -->
+  <div class="modal-backdrop" id="incoming-video-call-modal">
+    <div class="modal-content glass-card" style="max-width: 400px; text-align: center; padding: 28px;">
+      <div style="margin-bottom: 16px;">
+        <img id="incoming-video-caller-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);">
+      </div>
+      <h3 id="incoming-video-caller-name" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Incoming Video Call</h3>
+      <p style="font-size: 0.88rem; color: var(--primary); font-weight: 600; margin-bottom: 24px;">
+        <i class="fa-solid fa-video fa-shake"></i> Incoming Video Call...
+      </p>
+      <div style="display: flex; gap: 14px;">
+        <button class="btn btn-danger" onclick="Call.rejectIncomingCall()" style="flex: 1; padding: 12px; font-weight: 700;">
+          <i class="fa-solid fa-phone-slash"></i> Decline
+        </button>
+        <button class="btn btn-primary" onclick="Call.acceptIncomingVideoCall()" style="flex: 1; padding: 12px; font-weight: 700; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+          <i class="fa-solid fa-video"></i> Accept Video
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/lib/signalr.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/call.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.getCurrentUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      document.getElementById('nav-user-avatar').src = UI.getAvatarUrl(user);
+      document.getElementById('nav-user-name').textContent = user.fullName || user.username;
+
+      Users.init();
+      Users.loadUsers();
+      Users.loadPendingRequests();
+      Users.loadConnectedFriends();
+      Chat.initSignalR();
+    });
+  </script>
+</body>
+</html>
