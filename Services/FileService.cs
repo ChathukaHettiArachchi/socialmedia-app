@@ -35,12 +35,12 @@ namespace SocialConnect.Services
 
             // Category & File Size Limits
             category = category.ToLowerInvariant().Trim();
-            long maxAllowedSize = 25 * 1024 * 1024; // Default 25 MB
+            long maxAllowedSize = 35 * 1024 * 1024; // Default 35 MB
 
-            if (category == "images" || new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" }.Contains(extension))
+            if (category == "images" || new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".bmp" }.Contains(extension))
             {
                 category = "images";
-                maxAllowedSize = 10 * 1024 * 1024; // 10 MB limit for images
+                maxAllowedSize = 35 * 1024 * 1024; // 35 MB limit for images
             }
             else if (category == "videos" || new[] { ".mp4", ".webm", ".mov", ".m4v" }.Contains(extension))
             {
@@ -50,7 +50,7 @@ namespace SocialConnect.Services
             else if (category == "audio" || new[] { ".mp3", ".wav", ".ogg", ".webm", ".m4a" }.Contains(extension))
             {
                 category = "audio";
-                maxAllowedSize = 20 * 1024 * 1024; // 20 MB limit for audio
+                maxAllowedSize = 25 * 1024 * 1024; // 25 MB limit for audio
             }
 
             if (file.Length > maxAllowedSize)
@@ -58,7 +58,8 @@ namespace SocialConnect.Services
                 throw new InvalidOperationException($"File size exceeds the maximum limit of {maxAllowedSize / (1024 * 1024)}MB for {category}.");
             }
 
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var safeExt = string.IsNullOrEmpty(extension) ? (category == "images" ? ".jpg" : ".bin") : extension;
+            var uniqueFileName = $"{Guid.NewGuid()}{safeExt}";
             var relativePath = await _storage.SaveFileAsync(file, category, uniqueFileName);
 
             var user = await _db.Users.FirstAsync(u => u.Id == uploadedById);

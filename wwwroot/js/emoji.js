@@ -22,12 +22,33 @@ const Emoji = {
     html += '</div>';
 
     popover.innerHTML = html;
+
+    // Attach click outside listener to auto-close popover
+    if (!this.listenerAttached) {
+      this.listenerAttached = true;
+      document.addEventListener('click', (e) => {
+        const pop = document.getElementById(popoverId);
+        const emojiBtn = document.getElementById('chat-emoji-btn');
+        if (pop && pop.classList.contains('show')) {
+          if (!pop.contains(e.target) && !emojiBtn?.contains(e.target)) {
+            pop.classList.remove('show');
+          }
+        }
+      });
+    }
   },
 
-  togglePicker(popoverId) {
+  togglePicker(popoverId = 'emoji-popover') {
     const popover = document.getElementById(popoverId);
     if (popover) {
       popover.classList.toggle('show');
+    }
+  },
+
+  closePicker(popoverId = 'emoji-popover') {
+    const popover = document.getElementById(popoverId);
+    if (popover) {
+      popover.classList.remove('show');
     }
   },
 
@@ -37,10 +58,11 @@ const Emoji = {
       const start = input.selectionStart || input.value.length;
       const end = input.selectionEnd || input.value.length;
       input.value = input.value.substring(0, start) + emojiStr + input.value.substring(end);
-      input.focus();
-      input.setSelectionRange(start + emojiStr.length, start + emojiStr.length);
+      try {
+        input.setSelectionRange(start + emojiStr.length, start + emojiStr.length);
+      } catch (e) {}
       
-      // Dispatch input event for typing indicator
+      // Dispatch input event for typing indicator and auto-grow
       input.dispatchEvent(new Event('input', { bubbles: true }));
     }
   }

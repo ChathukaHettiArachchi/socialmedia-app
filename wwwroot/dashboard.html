@@ -4,19 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - SocialConnect</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/users.css">
-  <link rel="stylesheet" href="css/call.css">
-  <link rel="stylesheet" href="css/profile.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/style.css?v=2">
+  <link rel="stylesheet" href="css/dashboard.css?v=2">
+  <link rel="stylesheet" href="css/users.css?v=2">
+  <link rel="stylesheet" href="css/call.css?v=2">
+  <link rel="stylesheet" href="css/profile.css?v=2">
+  <link rel="stylesheet" href="css/responsive.css?v=2">
 </head>
 <body>
   <div class="app-layout">
     <!-- Sidebar -->
     <aside class="app-sidebar">
       <div class="sidebar-header">
-        <div class="user-profile-summary" id="open-profile-btn" title="View Profile">
+        <div class="user-profile-summary" id="open-profile-btn" title="View Profile" onclick="UI.openModal('view-profile-modal')">
           <img id="header-user-avatar" src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="User Avatar" class="user-avatar">
           <div class="user-details-mini">
             <span id="header-user-name" class="user-name-display">Loading...</span>
@@ -27,29 +27,42 @@
           <button class="icon-btn" id="find-people-nav-btn" title="Find People" onclick="window.location.href='users.html'">
             <i class="fa-solid fa-user-plus"></i>
           </button>
-          <button class="icon-btn" id="edit-profile-btn" title="Edit Profile">
+          <button class="icon-btn" id="edit-profile-btn" title="Edit Profile" onclick="UI.openModal('edit-profile-modal')">
             <i class="fa-solid fa-user-pen"></i>
           </button>
-          <button class="icon-btn" id="logout-btn" title="Logout" style="color: var(--accent-danger);">
+          <button class="icon-btn" id="logout-btn" title="Logout" style="color: var(--accent-danger);" onclick="Auth.logout()">
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
       </div>
 
       <div class="sidebar-nav">
-        <button class="nav-tab active" id="tab-chats-btn">
+        <button class="nav-tab active" id="tab-chats-btn" onclick="switchDashboardTab('chats')">
           <i class="fa-solid fa-comments"></i> Chats
         </button>
-        <button class="nav-tab" id="tab-people-btn">
+        <button class="nav-tab" id="tab-people-btn" onclick="switchDashboardTab('people')">
           <i class="fa-solid fa-user-group"></i> People
         </button>
-        <button class="nav-tab" id="tab-calls-btn">
+        <button class="nav-tab" id="tab-calls-btn" onclick="switchDashboardTab('calls')">
           <i class="fa-solid fa-clock-rotate-left"></i> Calls
         </button>
       </div>
 
       <!-- Chats Sidebar Panel -->
       <div class="sidebar-content" id="sidebar-chats-panel">
+        <a href="chat.html" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center; margin-bottom: 14px; gap: 6px; padding: 8px 12px; font-size: 0.84rem;">
+          <i class="fa-solid fa-comments"></i> Open Full Chat Window
+        </a>
+
+        <div style="margin-bottom: 16px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+            Recent Chats
+          </h4>
+          <div id="sidebar-conversations-container">
+            <!-- Active chats list -->
+          </div>
+        </div>
+
         <div style="margin-bottom: 16px;">
           <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
             Connected Friends
@@ -283,30 +296,15 @@
   </div>
 
   <script src="js/lib/signalr.min.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/profile.js"></script>
-  <script src="js/users.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/call.js"></script>
+  <script src="js/api.js?v=2"></script>
+  <script src="js/ui.js?v=2"></script>
+  <script src="js/auth.js?v=2"></script>
+  <script src="js/profile.js?v=2"></script>
+  <script src="js/users.js?v=2"></script>
+  <script src="js/chat.js?v=2"></script>
+  <script src="js/call.js?v=2"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const user = await Auth.getCurrentUser();
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
-      }
-
-      Profile.init();
-      Profile.renderProfileData(user);
-      Users.init();
-      Chat.initSignalR();
-
-      // Load connections for sidebar and dashboard
-      loadDashboardConnections();
-
-      // Tab Toggling
+    window.switchDashboardTab = function(tabName) {
       const tabChatsBtn = document.getElementById('tab-chats-btn');
       const tabPeopleBtn = document.getElementById('tab-people-btn');
       const tabCallsBtn = document.getElementById('tab-calls-btn');
@@ -314,52 +312,60 @@
       const peoplePanel = document.getElementById('sidebar-people-panel');
       const callsPanel = document.getElementById('sidebar-calls-panel');
 
-      tabChatsBtn.addEventListener('click', () => {
-        tabChatsBtn.classList.add('active');
-        tabPeopleBtn.classList.remove('active');
+      if (tabName === 'chats') {
+        if (tabChatsBtn) tabChatsBtn.classList.add('active');
+        if (tabPeopleBtn) tabPeopleBtn.classList.remove('active');
         if (tabCallsBtn) tabCallsBtn.classList.remove('active');
-        chatsPanel.style.display = 'block';
-        peoplePanel.style.display = 'none';
+        if (chatsPanel) chatsPanel.style.display = 'block';
+        if (peoplePanel) peoplePanel.style.display = 'none';
         if (callsPanel) callsPanel.style.display = 'none';
-      });
-
-      tabPeopleBtn.addEventListener('click', () => {
-        tabPeopleBtn.classList.add('active');
-        tabChatsBtn.classList.remove('active');
+      } else if (tabName === 'people') {
+        if (tabPeopleBtn) tabPeopleBtn.classList.add('active');
+        if (tabChatsBtn) tabChatsBtn.classList.remove('active');
         if (tabCallsBtn) tabCallsBtn.classList.remove('active');
-        peoplePanel.style.display = 'block';
-        chatsPanel.style.display = 'none';
+        if (peoplePanel) peoplePanel.style.display = 'block';
+        if (chatsPanel) chatsPanel.style.display = 'none';
         if (callsPanel) callsPanel.style.display = 'none';
-        
-        Users.loadUsersContainer('sidebar-users-container');
-        Users.loadPendingRequestsContainer('sidebar-pending-container');
-      });
-
-      if (tabCallsBtn) {
-        tabCallsBtn.addEventListener('click', () => {
-          tabCallsBtn.classList.add('active');
-          tabChatsBtn.classList.remove('active');
-          tabPeopleBtn.classList.remove('active');
-          if (callsPanel) callsPanel.style.display = 'block';
-          chatsPanel.style.display = 'none';
-          peoplePanel.style.display = 'none';
-
-          if (typeof Call !== 'undefined' && Call.loadCallHistory) {
-            Call.loadCallHistory();
-          }
-        });
+        if (typeof Users !== 'undefined' && Users.loadUsersContainer) {
+          Users.loadUsersContainer('sidebar-users-container');
+          Users.loadPendingRequestsContainer('sidebar-pending-container');
+        }
+      } else if (tabName === 'calls') {
+        if (tabCallsBtn) tabCallsBtn.classList.add('active');
+        if (tabChatsBtn) tabChatsBtn.classList.remove('active');
+        if (tabPeopleBtn) tabPeopleBtn.classList.remove('active');
+        if (callsPanel) callsPanel.style.display = 'block';
+        if (chatsPanel) chatsPanel.style.display = 'none';
+        if (peoplePanel) peoplePanel.style.display = 'none';
+        if (typeof Call !== 'undefined' && Call.loadCallHistory) {
+          Call.loadCallHistory();
+        }
       }
+    };
 
-      // Event listeners for profile modals & logout
-      document.getElementById('open-profile-btn').addEventListener('click', () => UI.openModal('view-profile-modal'));
-      document.getElementById('edit-profile-btn').addEventListener('click', () => UI.openModal('edit-profile-modal'));
-      document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const user = await Auth.getCurrentUser();
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        try { Profile.init(); } catch (e) { console.warn('Profile.init warning:', e); }
+        try { Profile.renderProfileData(user); } catch (e) { console.warn('Profile.renderProfileData warning:', e); }
+        try { Users.init(); } catch (e) { console.warn('Users.init warning:', e); }
+        try { if (typeof Chat !== 'undefined' && Chat.initSignalR) Chat.initSignalR(); } catch (e) { console.warn('Chat.initSignalR warning:', e); }
+        try { if (typeof Chat !== 'undefined' && Chat.loadUserConversations) Chat.loadUserConversations(); } catch (e) { console.warn('Chat.loadUserConversations warning:', e); }
+        try { loadDashboardConnections(); } catch (e) { console.warn('loadDashboardConnections warning:', e); }
+      } catch (err) {
+        console.error('Dashboard init error:', err);
+      }
     });
 
     async function loadDashboardConnections() {
       try {
         const [friends, conversations] = await Promise.all([
-          API.get('/friendrequests/friends'),
+          API.get('/friendrequests/friends').catch(() => []),
           API.get('/conversations').catch(() => [])
         ]);
 

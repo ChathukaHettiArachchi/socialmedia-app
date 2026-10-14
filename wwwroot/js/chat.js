@@ -6,9 +6,13 @@ const Chat = {
   isTyping: false,
   currentPage: 1,
 
+  headerTimer: null,
+
   async init() {
     await this.initSignalR();
     this.bindEvents();
+    this.initSwipeToGoBack();
+    this.startRealtimeHeaderTimer();
   },
 
   async initSignalR() {
@@ -107,12 +111,170 @@ const Chat = {
     const inputField = document.getElementById('chat-message-input');
     if (inputField) {
       inputField.addEventListener('input', () => this.handleTypingInput());
+      inputField.addEventListener('click', () => {
+        if (typeof Emoji !== 'undefined' && Emoji.closePicker) {
+          Emoji.closePicker();
+        }
+      });
       inputField.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          messageForm?.dispatchEvent(new Event('submit', { cancelable: true }));
+          this.handleSendMessage(e);
         }
       });
+    }
+
+    const actionBtn = document.getElementById('chat-action-btn');
+    if (actionBtn) {
+      actionBtn.addEventListener('click', (e) => this.handleActionButtonClick(e));
+    }
+
+    const messagesWindow = document.getElementById('chat-messages-window');
+    if (messagesWindow) {
+      messagesWindow.addEventListener('click', () => {
+        if (typeof Emoji !== 'undefined' && Emoji.closePicker) {
+          Emoji.closePicker();
+        }
+      });
+    }
+  },
+
+  initSwipeToGoBack() {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    const chatContainer = document.querySelector('.chat-container') || document.querySelector('.app-main');
+    if (!chatContainer) return;
+
+    chatContainer.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchEndX = touchStartX;
+      touchEndY = touchStartY;
+    }, { passive: true });
+
+    chatContainer.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      touchEndX = touch.clientX;
+      touchEndY = touch.clientY;
+    }, { passive: true });
+
+    chatContainer.addEventListener('touchend', () => {
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = Math.abs(touchEndY - touchStartY);
+
+      const layout = document.querySelector('.app-layout');
+      if (layout && layout.classList.contains('mobile-chat-active')) {
+        // Swiping from left edge toward right
+        if (touchStartX < 120 && deltaX > 50 && deltaY < 90) {
+          this.showConversationsListOnMobile();
+        }
+      }
+    }, { passive: true });
+  },
+
+  startRealtimeHeaderTimer() {
+    if (this.headerTimer) clearInterval(this.headerTimer);
+    this.headerTimer = setInterval(() => {
+      if (this.activeConversation && this.activeConversation.otherParticipant) {
+        const partner = this.activeConversation.otherParticipant;
+        if (!partner.isOnline && partner.lastSeenAt) {
+          const statusEl = document.querySelector('.chat-header-status');
+          if (statusEl) {
+            statusEl.textContent = this.formatLastSeen(partner.lastSeenAt);
+          }
+        }
+      }
+    }, 20000);
+  },
+
+  parseDate(dateInput) {
+    if (!dateInput) return new Date();
+    if (dateInput instanceof Date) return dateInput;
+    let str = String(dateInput).trim();
+    // If ISO date without timezone ('Z' or '+/-HH:mm'), append 'Z' so it is parsed as UTC
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(str) && !str.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(str)) {
+      str += 'Z';
+    }
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? new Date(dateInput) : d;
+  },
+
+  formatMessageTime(dateInput) {
+    const d = this.parseDate(dateInput);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  },
+
+  formatLastSeen(dateInput) {
+    if (!dateInput) return 'Offline';
+    const date = this.parseDate(dateInput);
+    const now = new Date();
+    const diffSeconds = Math.max(0, Math.floor((now - date) / 1000));
+    if (diffSeconds < 60) return 'Last seen just now';
+    if (diffSeconds < 3600) {
+      const mins = Math.floor(diffSeconds / 60);
+      return `Last seen ${mins}m ago`;
+    }
+    if (diffSeconds < 86400) {
+      const hours = Math.floor(diffSeconds / 3600);
+      return `Last seen ${hours}h ago`;
+    }
+    return `Last seen ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  },
+
+  handleActionButtonClick(e) {
+    const inputField = document.getElementById('chat-message-input');
+    const hasText = inputField && inputField.value.trim().length > 0;
+
+    if (hasText) {
+      this.handleSendMessage(e);
+    } else {
+      if (typeof Media !== 'undefined' && Media.startVoiceRecording) {
+        Media.startVoiceRecording();
+      }
+    }
+  },
+
+  adjustTextareaHeight(textarea) {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    // Single line ~22px, max 3 lines is approx 72-74px
+    const maxHeight = 74;
+    const scrollH = textarea.scrollHeight;
+    if (scrollH > maxHeight) {
+      textarea.style.height = maxHeight + 'px';
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.height = Math.max(scrollH, 22) + 'px';
+      textarea.style.overflowY = 'hidden';
+    }
+  },
+
+  updateActionButtonState() {
+    const inputField = document.getElementById('chat-message-input');
+    const actionBtn = document.getElementById('chat-action-btn');
+    if (!inputField || !actionBtn) return;
+
+    const hasText = inputField.value.trim().length > 0;
+    if (hasText) {
+      if (!actionBtn.classList.contains('is-send')) {
+        actionBtn.classList.remove('is-mic');
+        actionBtn.classList.add('is-send');
+        actionBtn.title = 'Send Message';
+        actionBtn.setAttribute('aria-label', 'Send Message');
+        actionBtn.innerHTML = '<i class="fa-solid fa-paper-plane" style="transform: translateX(1px);"></i>';
+      }
+    } else {
+      if (!actionBtn.classList.contains('is-mic')) {
+        actionBtn.classList.remove('is-send');
+        actionBtn.classList.add('is-mic');
+        actionBtn.title = 'Record Voice Message';
+        actionBtn.setAttribute('aria-label', 'Record Voice Message');
+        actionBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+      }
     }
   },
 
@@ -162,6 +324,18 @@ const Chat = {
 
     // Refresh conversation list in sidebar
     this.loadUserConversations();
+
+    if (typeof Emoji !== 'undefined' && Emoji.closePicker) {
+      Emoji.closePicker();
+    }
+
+    const inputField = document.getElementById('chat-message-input');
+    if (inputField) {
+      inputField.value = '';
+      this.adjustTextareaHeight(inputField);
+      this.updateActionButtonState();
+      inputField.focus();
+    }
   },
 
   renderChatHeader(conversation) {
@@ -172,33 +346,27 @@ const Chat = {
     const partnerId = partner.id || partner.Id || '';
     const partnerFullName = partner.fullName || partner.FullName || partner.username || partner.Username || 'User';
     const avatarUrl = UI.getAvatarUrl(partner);
-    const isOnline = partner.isOnline;
+    const isOnline = partner.isOnline !== undefined ? partner.isOnline : partner.IsOnline;
     
     let lastSeenText = 'Offline';
     if (isOnline) {
       lastSeenText = '🟢 Online';
-    } else if (partner.lastSeenAt) {
-      const date = new Date(partner.lastSeenAt);
-      lastSeenText = `Last seen ${this.formatLastSeen(date)}`;
+    } else if (partner.lastSeenAt || partner.LastSeenAt) {
+      lastSeenText = this.formatLastSeen(partner.lastSeenAt || partner.LastSeenAt);
     }
 
     headerContainer.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <button class="btn btn-secondary btn-sm mobile-back-btn" onclick="Chat.showConversationsListOnMobile()" title="Back to User List" style="padding: 6px 10px; font-size: 0.8rem;">
-          <i class="fa-solid fa-chevron-left"></i> Chats
-        </button>
-        <div class="chat-header-user">
-          <div class="avatar-container">
-            <img src="${avatarUrl}" class="chat-header-avatar" alt="${UI.escapeHtml(partnerFullName)}">
-            <span class="${isOnline ? 'online-blob' : 'offline-blob'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
-          </div>
-          <div class="chat-header-details">
-            <div class="chat-header-name">${UI.escapeHtml(partnerFullName)}</div>
-            <div class="chat-header-status">${lastSeenText}</div>
-          </div>
+      <div class="chat-header-user" style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;">
+        <div class="avatar-container" style="position: relative; flex-shrink: 0;">
+          <img src="${avatarUrl}" class="chat-header-avatar" alt="${UI.escapeHtml(partnerFullName)}">
+          <span class="${isOnline ? 'online-blob' : 'offline-blob'}" title="${isOnline ? 'Online' : 'Offline'}"></span>
+        </div>
+        <div class="chat-header-details" style="flex: 1; min-width: 0;">
+          <div class="chat-header-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; font-size: 0.96rem;">${UI.escapeHtml(partnerFullName)}</div>
+          <div class="chat-header-status" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.78rem;">${lastSeenText}</div>
         </div>
       </div>
-      <div class="chat-header-actions">
+      <div class="chat-header-actions" style="flex-shrink: 0;">
         <button class="icon-btn" onclick="Call.startVoiceCall('${partnerId}', '${UI.escapeHtml(partnerFullName)}', '${avatarUrl}')" title="Voice Call">
           <i class="fa-solid fa-phone" style="color: var(--accent-green);"></i>
         </button>
@@ -248,7 +416,7 @@ const Chat = {
     const senderFullName = msg.senderFullName || msg.SenderFullName || msg.senderUsername || msg.SenderUsername || 'User';
     const senderAvatarUrl = msg.senderAvatarUrl || msg.SenderAvatarUrl || UI.getAvatarUrl({ fullName: senderFullName });
     const createdAt = msg.createdAt || msg.CreatedAt || new Date();
-    const timeStr = new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = this.formatMessageTime(createdAt);
     const msgId = msg.id || msg.Id || '';
     const isRead = msg.isRead ?? msg.IsRead ?? false;
 
@@ -318,6 +486,9 @@ const Chat = {
       `;
     }
 
+    const type = (msg.messageType || msg.MessageType || 'Text').toUpperCase();
+    const isOnlyEmoji = (type === 'TEXT' || !msg.messageType) && this.isOnlyEmoji(rawText);
+
     const contentHtml = this.renderMessageContent(msg);
 
     return `
@@ -325,9 +496,7 @@ const Chat = {
         <div class="chat-message ${isOutgoing ? 'outgoing' : 'incoming'}">
           ${!isOutgoing ? `<img src="${senderAvatarUrl}" class="chat-msg-avatar">` : ''}
           <div class="chat-msg-content">
-            <div class="chat-msg-bubble">
-              ${contentHtml}
-            </div>
+            <div class="chat-msg-bubble ${isOnlyEmoji ? 'is-emoji-bubble' : ''}">${contentHtml}</div>
             <div class="chat-msg-meta">
               <span>${timeStr}</span>
               ${isOutgoing ? `<i class="fa-solid ${isRead ? 'fa-check-double' : 'fa-check'}" style="color: ${isRead ? 'var(--accent-green)' : 'inherit'};"></i>` : ''}
@@ -433,12 +602,16 @@ const Chat = {
       `;
     }
 
-    // Default Text / Emoji
-    return UI.escapeHtml(rawText);
+    // Default Text / Emoji (Preserve line breaks from Enter key)
+    const trimmed = rawText.trim();
+    if (this.isOnlyEmoji(trimmed)) {
+      return `<span class="emoji-large">${trimmed}</span>`;
+    }
+    return UI.escapeHtml(rawText).replace(/\n/g, '<br>');
   },
 
   async handleSendMessage(event) {
-    event.preventDefault();
+    if (event) event.preventDefault();
     if (!this.activeConversation) {
       UI.showToast('error', 'Select a conversation first.');
       return;
@@ -449,7 +622,12 @@ const Chat = {
     if (!textContent) return;
 
     inputField.value = '';
+    this.adjustTextareaHeight(inputField);
+    this.updateActionButtonState();
     this.stopTypingSignal();
+    if (typeof Emoji !== 'undefined' && Emoji.closePicker) {
+      Emoji.closePicker();
+    }
 
     try {
       let sentMsg = null;
@@ -546,6 +724,10 @@ const Chat = {
   },
 
   handleTypingInput() {
+    const inputField = document.getElementById('chat-message-input');
+    this.adjustTextareaHeight(inputField);
+    this.updateActionButtonState();
+
     if (!this.activeConversation || !this.connection) return;
 
     if (!this.isTyping) {
@@ -590,10 +772,20 @@ const Chat = {
   },
 
   handleUserStatusChanged(data) {
-    if (this.activeConversation && this.activeConversation.otherParticipant.id === data.userId) {
-      this.activeConversation.otherParticipant.isOnline = data.isOnline;
-      this.activeConversation.otherParticipant.lastSeenAt = data.lastSeenAt;
-      this.renderChatHeader(this.activeConversation);
+    if (!data) return;
+    const changedUserId = data.userId || data.UserId;
+    if (this.activeConversation && this.activeConversation.otherParticipant) {
+      const partner = this.activeConversation.otherParticipant;
+      const partnerId = partner.id || partner.Id;
+      if (partnerId && changedUserId && String(partnerId).toLowerCase() === String(changedUserId).toLowerCase()) {
+        const isOnline = data.isOnline !== undefined ? data.isOnline : data.IsOnline;
+        const lastSeenAt = data.lastSeenAt || data.LastSeenAt;
+        partner.isOnline = isOnline;
+        if (lastSeenAt) {
+          partner.lastSeenAt = lastSeenAt;
+        }
+        this.renderChatHeader(this.activeConversation);
+      }
     }
     this.loadUserConversations();
   },
@@ -667,7 +859,7 @@ const Chat = {
       const isActive = this.activeConversation && this.activeConversation.id === c.id;
       const hasUnread = c.unreadCount > 0;
       const preview = this.formatLastMessagePreview(c.lastMessage);
-      const timeStr = c.lastMessage ? new Date(c.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const timeStr = c.lastMessage ? this.formatMessageTime(c.lastMessage.createdAt || c.lastMessage.CreatedAt) : '';
 
       let readTickHtml = '';
       if (c.lastMessage) {
@@ -711,6 +903,10 @@ const Chat = {
   },
 
   async openConversationById(conversationId) {
+    if (!document.getElementById('chat-messages-window')) {
+      window.location.href = `chat.html?conversationId=${conversationId}`;
+      return;
+    }
     try {
       const conversation = await API.get(`/conversations/${conversationId}`);
       await this.openConversation(conversation);
@@ -723,13 +919,16 @@ const Chat = {
     element.scrollTop = element.scrollHeight;
   },
 
-  formatLastSeen(date) {
-    const now = new Date();
-    const diffSeconds = Math.floor((now - date) / 1000);
-    if (diffSeconds < 60) return 'just now';
-    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
-    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
-    return date.toLocaleDateString();
+  isOnlyEmoji(text) {
+    if (!text) return false;
+    const trimmed = text.trim();
+    if (!trimmed || trimmed.length > 8 || /[a-zA-Z0-9]/.test(trimmed)) return false;
+    try {
+      const reg = new RegExp('^(\\p{Extended_Pictographic}|\\u200d|\\ufe0f|\\s){1,4}$', 'u');
+      return reg.test(trimmed);
+    } catch (e) {
+      return false;
+    }
   }
 };
 

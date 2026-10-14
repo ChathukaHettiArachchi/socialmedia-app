@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat - SocialConnect</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/users.css">
-  <link rel="stylesheet" href="css/chat.css">
-  <link rel="stylesheet" href="css/call.css">
-  <link rel="stylesheet" href="css/profile.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/dashboard.css?v=3">
+  <link rel="stylesheet" href="css/users.css?v=3">
+  <link rel="stylesheet" href="css/chat.css?v=3">
+  <link rel="stylesheet" href="css/call.css?v=3">
+  <link rel="stylesheet" href="css/profile.css?v=3">
+  <link rel="stylesheet" href="css/responsive.css?v=3">
   <style>
     /* Emoji Popover Styles */
     .emoji-popover {
@@ -132,26 +132,30 @@
         <!-- Hidden File Input for Media Uploads -->
         <input type="file" id="chat-file-input" style="display: none;" onchange="Media.handleFileAttachmentSelect(event)" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.zip,.txt">
 
-        <!-- Chat Input Bar -->
+        <!-- Hidden Camera Input for Taking Photos on Mobile Directly -->
+        <input type="file" id="chat-camera-input" style="display: none;" onchange="Media.handleFileAttachmentSelect(event)" accept="image/*" capture="environment">
+
+        <!-- WhatsApp Style Chat Input Bar -->
         <form class="chat-input-bar" id="chat-message-form">
-          <div class="chat-input-actions">
-            <button type="button" class="icon-btn" title="Emoji Picker" onclick="Emoji.togglePicker('emoji-popover')">
-              <i class="fa-solid fa-face-smile" style="color: var(--accent-warning);"></i>
+          <div class="chat-input-pill">
+            <button type="button" class="pill-btn pill-emoji-btn" id="chat-emoji-btn" title="Emoji Picker" onclick="Emoji.togglePicker('emoji-popover')">
+              <i class="fa-solid fa-face-smile"></i>
             </button>
-            <button type="button" class="icon-btn" title="Attach Media or File" onclick="document.getElementById('chat-file-input').click()">
-              <i class="fa-solid fa-paperclip"></i>
-            </button>
-            <button type="button" class="icon-btn" title="Record Voice Message" onclick="Media.startVoiceRecording()">
-              <i class="fa-solid fa-microphone" style="color: var(--accent-danger);"></i>
-            </button>
+
+            <textarea id="chat-message-input" class="chat-input-field" placeholder="Type a message" rows="1" autocomplete="off"></textarea>
+
+            <div class="pill-right-actions">
+              <button type="button" class="pill-btn" id="chat-attach-btn" title="Attach Media or File" onclick="document.getElementById('chat-file-input').click()">
+                <i class="fa-solid fa-paperclip"></i>
+              </button>
+              <button type="button" class="pill-btn" id="chat-camera-btn" title="Take a Photo" onclick="Media.openCameraCapture()">
+                <i class="fa-solid fa-camera"></i>
+              </button>
+            </div>
           </div>
 
-          <div class="chat-input-wrapper">
-            <input type="text" id="chat-message-input" class="chat-input-field" placeholder="Type a message..." autocomplete="off">
-          </div>
-
-          <button type="submit" class="send-btn" title="Send Message">
-            <i class="fa-solid fa-paper-plane"></i>
+          <button type="button" class="chat-action-btn is-mic" id="chat-action-btn" title="Record Voice Message" aria-label="Record Voice Message">
+            <i class="fa-solid fa-microphone"></i>
           </button>
         </form>
       </div>
@@ -173,6 +177,39 @@
       <div style="display: flex; gap: 12px;">
         <button class="btn btn-secondary" onclick="Media.cancelVoiceRecording()" style="flex: 1;">Discard</button>
         <button class="btn btn-primary" onclick="Media.sendRecordedAudio()" style="flex: 1;">Send Audio <i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Camera Viewfinder Modal -->
+  <div class="modal-backdrop" id="camera-modal">
+    <div class="modal-content glass-card" style="max-width: 480px; width: 95%; text-align: center; padding: 22px;">
+      <button class="modal-close-btn" onclick="Media.closeCameraModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 14px; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fa-solid fa-camera" style="color: var(--primary);"></i> Take a Photo
+      </h3>
+      <div id="camera-viewport-box" style="position: relative; border-radius: 14px; overflow: hidden; background: #000; width: 100%; aspect-ratio: 4/3; margin-bottom: 16px; display: flex; align-items: center; justify-content: center;">
+        <video id="camera-video-preview" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <canvas id="camera-snapshot-canvas" style="display: none;"></canvas>
+        <img id="camera-snapshot-img" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 14px;">
+      </div>
+      <div id="camera-live-controls" style="display: flex; justify-content: center; align-items: center; gap: 12px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="camera-switch-facing-btn" onclick="Media.switchCameraFacing()" title="Switch Camera" style="padding: 9px 16px; border-radius: 20px;">
+          <i class="fa-solid fa-camera-rotate"></i> Switch
+        </button>
+        <button type="button" class="btn btn-primary" onclick="Media.captureSnapshot()" style="padding: 10px 24px; border-radius: 30px; font-weight: 700; box-shadow: 0 4px 14px var(--primary-glow);">
+          <i class="fa-solid fa-circle-dot"></i> Snap Photo
+        </button>
+      </div>
+      <div id="camera-preview-controls" style="display: none; justify-content: center; gap: 12px;">
+        <button type="button" class="btn btn-secondary" onclick="Media.retakeSnapshot()" style="flex: 1; border-radius: 20px;">
+          <i class="fa-solid fa-rotate-left"></i> Retake
+        </button>
+        <button type="button" class="btn btn-primary" onclick="Media.acceptCapturedSnapshot()" style="flex: 1; border-radius: 20px;">
+          Use Photo <i class="fa-solid fa-check"></i>
+        </button>
       </div>
     </div>
   </div>
@@ -199,6 +236,8 @@
         <i class="fa-solid fa-xmark"></i>
       </button>
       <img id="lightbox-img" src="" class="lightbox-img">
+    </div>
+  </div>
   <!-- Incoming Voice Call Modal -->
   <div class="modal-backdrop" id="incoming-voice-call-modal">
     <div class="modal-content glass-card" style="max-width: 400px; text-align: center; padding: 28px;">
@@ -242,13 +281,13 @@
   </div>
 
   <script src="js/lib/signalr.min.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/emoji.js"></script>
-  <script src="js/media.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/call.js"></script>
+  <script src="js/api.js?v=3"></script>
+  <script src="js/ui.js?v=3"></script>
+  <script src="js/auth.js?v=3"></script>
+  <script src="js/emoji.js?v=3"></script>
+  <script src="js/media.js?v=3"></script>
+  <script src="js/chat.js?v=3"></script>
+  <script src="js/call.js?v=3"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const user = await Auth.getCurrentUser();
@@ -267,8 +306,11 @@
 
       const urlParams = new URLSearchParams(window.location.search);
       const targetUserId = urlParams.get('userId');
+      const targetConversationId = urlParams.get('conversationId');
       if (targetUserId) {
         await Chat.startPrivateChat(targetUserId);
+      } else if (targetConversationId) {
+        await Chat.openConversationById(targetConversationId);
       }
     });
   </script>
