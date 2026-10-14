@@ -9,6 +9,13 @@ const Chat = {
   headerTimer: null,
 
   async init() {
+    // Lock window scroll so header is never scrolled off on mobile
+    window.addEventListener('scroll', () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    }, { passive: true });
+
     await this.initSignalR();
     this.bindEvents();
     this.initSwipeToGoBack();
@@ -110,6 +117,14 @@ const Chat = {
 
     const inputField = document.getElementById('chat-message-input');
     if (inputField) {
+      inputField.addEventListener('focus', () => {
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          document.body.scrollTop = 0;
+        }, 80);
+      });
       inputField.addEventListener('input', () => this.handleTypingInput());
       inputField.addEventListener('click', () => {
         if (typeof Emoji !== 'undefined' && Emoji.closePicker) {
